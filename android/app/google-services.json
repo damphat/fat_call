@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "143894010196",
+    "project_id": "damphat-1ce0d",
+    "storage_bucket": "damphat-1ce0d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:143894010196:android:b7299fb869015314e290c1",
+        "android_client_info": {
+          "package_name": "com.damphat.fat_call"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "143894010196-p1qnmldpv1ucao51e35v4bcu3lq3b4tb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCl05SoXlATK9s3sqGCBYCtnfgwq53i86g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "143894010196-p1qnmldpv1ucao51e35v4bcu3lq3b4tb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
