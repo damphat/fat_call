@@ -69,6 +69,8 @@ class Auth with ChangeNotifier {
   Future<UserCredential> signInWithGoogle() async {
     await ensureInit();
 
+    // Error: PlatformException(popup_closed_by_user, Exception raised from GoogleAuth.signIn(), https://developers.google.com/identity/sign-in/web/reference#error_codes_2, null)
+    // disable internet => lệnh không bao giờ finish
     final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
 
     final GoogleSignInAuthentication googleAuth =
@@ -84,6 +86,11 @@ class Auth with ChangeNotifier {
 
   @override
   String toString() {
-    return '$runtimeType($state, $user, $error)';
+    var _user = 'null';
+    if (user != null) {
+      _user = user.displayName ?? user.email ?? user.uid;
+    }
+
+    return '$runtimeType($state, $_user, $error)';
   }
 }
