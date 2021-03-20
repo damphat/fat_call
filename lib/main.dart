@@ -1,29 +1,71 @@
+import 'package:fat_call/src/auth.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-Future<UserCredential> signInWithGoogle() async {
-  // Trigger the authentication flow
-  final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
-
-  // Obtain the auth details from the request
-  final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-  // Create a new credential
-  final GoogleAuthCredential credential = GoogleAuthProvider.credential(
-    accessToken: googleAuth.accessToken,
-    idToken: googleAuth.idToken,
-  );
-
-  // Once signed in, return the UserCredential
-  return await FirebaseAuth.instance.signInWithCredential(credential);
+var auth = Auth();
+Future<void> main() async {
+  runApp(MaterialApp(
+    home: HomeScreen(),
+  ));
 }
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  var app = await Firebase.initializeApp();
-  print(app);
-  UserCredential user = await signInWithGoogle();
-  print(user);
+// splash (wait)
+// đã signin => home | signout
+// chưa signin => show button signin
+// đang signin
+class HomeScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var user = auth.user;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+        actions: [
+          if (user != null)
+            CircleAvatar(
+              backgroundImage: NetworkImage(user.photoURL),
+            )
+        ],
+      ),
+      body: Container(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.accents[14],
+              radius: 100,
+              child: Icon(
+                Icons.phone_enabled_outlined,
+                size: 150,
+              ),
+            ),
+            SizedBox(height: 40),
+            Text('Fat Call', textScaleFactor: 3),
+            SizedBox(
+              height: 150,
+            ),
+            if (user == null)
+              ElevatedButton(
+                onPressed: () {
+                  auth.signInWithGoogle();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text('SIGN IN WITH GOOGLE'),
+                ),
+              )
+            else
+              TextButton(
+                onPressed: () {
+                  auth.signOut();
+                },
+                child: Text('SIGN OUT'),
+              )
+          ],
+        ),
+      ),
+    );
+  }
 }
