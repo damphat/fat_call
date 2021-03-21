@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'auth_test/auth.dart';
+import 'package:sprintf/sprintf.dart';
 
 void main() {
   runApp(
@@ -28,25 +29,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const sep = const Divider(
+      thickness: 5,
+    );
+
     return Scaffold(
       appBar: AppBar(),
-      body: Column(
+      body: ListView(
         children: [
-          Wrap(
-            // alignment: MainAxisAlignment.center,
-
-            children: [
-              Btn(auth.ensureInit, 'ensureInit'),
-              Btn(auth.signInWithGoogle, 'signInWithGoogle'),
-              Btn(auth.signOut, 'signOut'),
-              Btn(auth.close, 'close'),
-              Btn(txt.clear, 'clear'),
-            ],
-          ),
+          Btn(auth.ensureInit, 'ensureInit'),
+          sep,
+          Btn(auth.signInWithGoogle, 'signInWithGoogle'),
+          sep,
+          Btn(auth.signOut, 'signOut'),
+          sep,
+          Btn(auth.close, 'close'),
+          sep,
+          Btn(txt.clear, 'clear'),
+          sep,
           Expanded(
             child: TextField(
+              readOnly: true,
+              decoration: InputDecoration(border: OutlineInputBorder()),
               controller: txt,
               maxLines: 1000,
+              minLines: 4,
             ),
           ),
         ],
@@ -65,13 +72,11 @@ class Btn extends StatefulWidget {
 }
 
 class _BtnState extends State<Btn> {
-  List<List> emits = [];
+  List<Emit> emits = [];
   // ignore: missing_return
-  Stream<dynamic> wrap(dynamic func) async* {
-    yield 'start';
-
+  Stream<Emit> wrap(dynamic func) async* {
     if (func == null) {
-      yield 'not implemented';
+      yield Emit(value: 'not implemented');
       return;
     }
 
@@ -79,7 +84,7 @@ class _BtnState extends State<Btn> {
       var watch = Stopwatch();
       var ret;
       var err;
-      var dur;
+      int dur;
       try {
         watch.start();
         ret = func();
@@ -87,14 +92,14 @@ class _BtnState extends State<Btn> {
         err = e;
       } finally {
         watch.stop();
-        dur = watch.elapsed;
+        dur = watch.elapsedMilliseconds;
       }
 
       if (err != null) {
-        yield [dur, 'throws', err];
+        yield Emit(dur: dur, kind: 'throws', value: err);
         return;
       } else {
-        yield [dur, 'return', ret];
+        yield Emit(dur: dur, kind: 'return', value: ret);
       }
 
       if (ret is Future) {
@@ -105,13 +110,13 @@ class _BtnState extends State<Btn> {
           err = e;
         } finally {
           watch.stop();
-          dur = watch.elapsed;
+          dur = watch.elapsedMilliseconds;
         }
 
         if (err != null) {
-          yield [dur, 'reject', err];
+          yield Emit(dur: dur, kind: 'reject', value: err);
         } else {
-          yield [dur, 'resolve', ret];
+          yield Emit(dur: dur, kind: 'resolve', value: ret);
         }
 
         return;
@@ -126,7 +131,8 @@ class _BtnState extends State<Btn> {
   void exec() {
     emits = [];
     wrap(widget.onPressed).listen((event) {
-      emits.add(emits);
+      emits.add(event);
+      setState(() {});
     });
   }
 
@@ -139,8 +145,26 @@ class _BtnState extends State<Btn> {
           onPressed: exec,
           child: Text(widget.text),
         ),
-        for (var item in emits) Text('${item[0]}:${item[1]}:${item[2]}'),
+        ListView.separated(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          itemBuilder: (_, i) => Text('${emits[i]}'),
+          separatorBuilder: (_, i) => Divider(),
+          itemCount: emits.length,
+        )
       ],
     );
+  }
+}
+
+class Emit {
+  int dur;
+  String kind;
+  Object value;
+  Emit({this.dur, this.kind, this.value});
+
+  @override
+  String toString() {
+    return sprintf('%s:%s:%s', [dur, kind, value]);
   }
 }

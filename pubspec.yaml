@@ -25,6 +25,7 @@ dependencies:
   firebase_auth: ^1.0.1
   google_sign_in: ^4.5.1
   provider: ^5.0.0
+  sprintf: ^6.0.0
   flutter:
     sdk: flutter
 
