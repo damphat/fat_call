@@ -36,31 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
             // alignment: MainAxisAlignment.center,
 
             children: [
-              TextButton(
-                  onPressed: () {
-                    auth.ensureInit();
-                  },
-                  child: Text('ensureInit')),
-              TextButton(
-                  onPressed: () {
-                    auth.signInWithGoogle();
-                  },
-                  child: Text('signInWithGoogle')),
-              TextButton(
-                  onPressed: () {
-                    auth.signOut();
-                  },
-                  child: Text('signOut')),
-              TextButton(
-                  onPressed: () {
-                    auth.close();
-                  },
-                  child: Text('close')),
-              TextButton(
-                  onPressed: () {
-                    txt.clear();
-                  },
-                  child: Text('clear log')),
+              Btn(auth.ensureInit, 'ensureInit'),
+              Btn(auth.signInWithGoogle, 'signInWithGoogle'),
+              Btn(auth.signOut, 'signOut'),
+              Btn(auth.close, 'close'),
+              Btn(txt.clear, 'clear'),
             ],
           ),
           Expanded(
@@ -71,6 +51,96 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class Btn extends StatefulWidget {
+  dynamic onPressed;
+  dynamic text;
+
+  Btn(this.onPressed, this.text);
+  @override
+  _BtnState createState() => _BtnState();
+}
+
+class _BtnState extends State<Btn> {
+  List<List> emits = [];
+  // ignore: missing_return
+  Stream<dynamic> wrap(dynamic func) async* {
+    yield 'start';
+
+    if (func == null) {
+      yield 'not implemented';
+      return;
+    }
+
+    if (func is Function) {
+      var watch = Stopwatch();
+      var ret;
+      var err;
+      var dur;
+      try {
+        watch.start();
+        ret = func();
+      } catch (e) {
+        err = e;
+      } finally {
+        watch.stop();
+        dur = watch.elapsed;
+      }
+
+      if (err != null) {
+        yield [dur, 'throws', err];
+        return;
+      } else {
+        yield [dur, 'return', ret];
+      }
+
+      if (ret is Future) {
+        try {
+          watch.start();
+          ret = await ret;
+        } catch (e) {
+          err = e;
+        } finally {
+          watch.stop();
+          dur = watch.elapsed;
+        }
+
+        if (err != null) {
+          yield [dur, 'reject', err];
+        } else {
+          yield [dur, 'resolve', ret];
+        }
+
+        return;
+      }
+
+      if (ret is Stream) {
+        return;
+      }
+    }
+  }
+
+  void exec() {
+    emits = [];
+    wrap(widget.onPressed).listen((event) {
+      emits.add(emits);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ElevatedButton(
+          onPressed: exec,
+          child: Text(widget.text),
+        ),
+        for (var item in emits) Text('${item[0]}:${item[1]}:${item[2]}'),
+      ],
     );
   }
 }

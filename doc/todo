@@ -1,0 +1,6 @@
+## throws catch finally
+- throws null
+- `rethrows` vs `throws err`
+- catch(e) là catch mọi thứ
+- uncaught exceptions
+
