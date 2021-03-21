@@ -1,9 +1,11 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-void log(String msg) {
+void log(msg) {
   print('xxx $msg');
 }
 
@@ -20,10 +22,13 @@ enum AuthState {
 }
 
 class Auth with ChangeNotifier {
+  FirebaseApp fapp;
+  FirebaseAuth fauth;
   AuthState state = AuthState.none;
   User user;
   dynamic error;
 
+  StreamSubscription<User> _userChangesSub;
   // test: lỗi config
   // test: lỗi mạng
   Future<void> ensureInit() async {
@@ -33,7 +38,15 @@ class Auth with ChangeNotifier {
 
       WidgetsFlutterBinding.ensureInitialized();
       try {
-        await Firebase.initializeApp();
+        fapp = await Firebase.initializeApp(
+            name: 'fatcall',
+            options: FirebaseOptions(
+              apiKey: "AIzaSyCl05SoXlATK9s3sqGCBYCtnfgwq53i86g",
+              appId: "1:143894010196:android:b7299fb869015314e290c1",
+              messagingSenderId: "143894010196",
+              projectId: "damphat-1ce0d",
+            ));
+        fauth = FirebaseAuth.instanceFor(app: fapp);
       } catch (e) {
         error = e;
         state = AuthState.initError;
@@ -44,12 +57,18 @@ class Auth with ChangeNotifier {
       state = user != null ? AuthState.on : AuthState.off;
       notifyListeners();
 
-      FirebaseAuth.instance.userChanges().listen((u) {
+      _userChangesSub = fauth.userChanges().listen((u) {
+        // dỏm, cái subcribtion này không tự close khi app đã close
+        // vậy mình phải dùng biến để lưu và tự close
+        // muốn biết
+        log(u);
         if (user != u || (state != AuthState.on && state != AuthState.off)) {
           user = u;
           state = u != null ? AuthState.on : AuthState.off;
           notifyListeners();
         }
+      }, onDone: () {
+        log('userChangs() is done');
       });
     }
   }
@@ -57,7 +76,7 @@ class Auth with ChangeNotifier {
   Future<void> signOut() async {
     if (state == AuthState.on) {
       state = AuthState.turnOff;
-      await FirebaseAuth.instance.signOut();
+      await fauth.signOut();
     } else {
       log('Can not signout when state=$state');
     }
@@ -69,9 +88,14 @@ class Auth with ChangeNotifier {
   Future<UserCredential> signInWithGoogle() async {
     await ensureInit();
 
+    // Unhandled Exception: PlatformException(network_error, com.google.android.gms.common.api.ApiException: 7: , null, null)
     // Error: PlatformException(popup_closed_by_user, Exception raised from GoogleAuth.signIn(), https://developers.google.com/identity/sign-in/web/reference#error_codes_2, null)
     // disable internet => lệnh không bao giờ finish
-    final GoogleSignInAccount googleUser = await GoogleSignIn().signIn();
+    final GoogleSignInAccount googleUser = await GoogleSignIn()
+        .signIn()
+        .timeout(Duration(seconds: 5), onTimeout: () {
+      log('signInWithGoogle() timeout');
+    });
 
     final GoogleSignInAuthentication googleAuth =
         await googleUser.authentication;
@@ -81,7 +105,17 @@ class Auth with ChangeNotifier {
       idToken: googleAuth.idToken,
     );
 
-    return await FirebaseAuth.instance.signInWithCredential(credential);
+    return await fauth.signInWithCredential(credential);
+  }
+
+  Future<void> close() async {
+    if (state != AuthState.none) {
+      await fapp?.delete();
+      state = AuthState.none;
+      user = null;
+      error = null;
+      notifyListeners();
+    }
   }
 
   @override
