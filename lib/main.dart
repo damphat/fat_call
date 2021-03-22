@@ -1,7 +1,7 @@
+import 'package:fat_call/dev_button.dart';
 import 'package:flutter/material.dart';
 
 import 'auth_test/auth.dart';
-import 'package:sprintf/sprintf.dart';
 
 void main() {
   runApp(
@@ -30,22 +30,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     const sep = const Divider(
-      thickness: 5,
+      thickness: 4,
     );
 
     return Scaffold(
       appBar: AppBar(),
       body: ListView(
         children: [
-          Btn(auth.ensureInit, 'ensureInit'),
+          DevButton(() async* {
+            for (var i = 1; i < 5; i++) {
+              if (i == 3) throw ' ba oi';
+              await Future.delayed(Duration(seconds: 1));
+              yield i;
+            }
+          }, '12345'),
           sep,
-          Btn(auth.signInWithGoogle, 'signInWithGoogle'),
+          DevButton(auth.ensureInit, 'ensureInit'),
           sep,
-          Btn(auth.signOut, 'signOut'),
+          DevButton(auth.signInWithGoogle, 'signInWithGoogle'),
           sep,
-          Btn(auth.close, 'close'),
+          DevButton(auth.signOut, 'signOut'),
           sep,
-          Btn(txt.clear, 'clear'),
+          DevButton(auth.close, 'close'),
+          sep,
+          DevButton(txt.clear, 'clear'),
           sep,
           Expanded(
             child: TextField(
@@ -59,112 +67,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-  }
-}
-
-class Btn extends StatefulWidget {
-  dynamic onPressed;
-  dynamic text;
-
-  Btn(this.onPressed, this.text);
-  @override
-  _BtnState createState() => _BtnState();
-}
-
-class _BtnState extends State<Btn> {
-  List<Emit> emits = [];
-  // ignore: missing_return
-  Stream<Emit> wrap(dynamic func) async* {
-    if (func == null) {
-      yield Emit(value: 'not implemented');
-      return;
-    }
-
-    if (func is Function) {
-      var watch = Stopwatch();
-      var ret;
-      var err;
-      int dur;
-      try {
-        watch.start();
-        ret = func();
-      } catch (e) {
-        err = e;
-      } finally {
-        watch.stop();
-        dur = watch.elapsedMilliseconds;
-      }
-
-      if (err != null) {
-        yield Emit(dur: dur, kind: 'throws', value: err);
-        return;
-      } else {
-        yield Emit(dur: dur, kind: 'return', value: ret);
-      }
-
-      if (ret is Future) {
-        try {
-          watch.start();
-          ret = await ret;
-        } catch (e) {
-          err = e;
-        } finally {
-          watch.stop();
-          dur = watch.elapsedMilliseconds;
-        }
-
-        if (err != null) {
-          yield Emit(dur: dur, kind: 'reject', value: err);
-        } else {
-          yield Emit(dur: dur, kind: 'resolve', value: ret);
-        }
-
-        return;
-      }
-
-      if (ret is Stream) {
-        return;
-      }
-    }
-  }
-
-  void exec() {
-    emits = [];
-    wrap(widget.onPressed).listen((event) {
-      emits.add(event);
-      setState(() {});
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ElevatedButton(
-          onPressed: exec,
-          child: Text(widget.text),
-        ),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
-          itemBuilder: (_, i) => Text('${emits[i]}'),
-          separatorBuilder: (_, i) => Divider(),
-          itemCount: emits.length,
-        )
-      ],
-    );
-  }
-}
-
-class Emit {
-  int dur;
-  String kind;
-  Object value;
-  Emit({this.dur, this.kind, this.value});
-
-  @override
-  String toString() {
-    return sprintf('%s:%s:%s', [dur, kind, value]);
   }
 }

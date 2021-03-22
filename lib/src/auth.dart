@@ -39,20 +39,9 @@ class Auth with ChangeNotifier {
       WidgetsFlutterBinding.ensureInitialized();
       try {
         try {
-          fapp = await Firebase.initializeApp(
-              name: 'fatcall',
-              options: FirebaseOptions(
-                projectId: "damphat-1ce0d",
-                appId: "1:143894010196:android:b7299fb869015314e290c1",
-                apiKey: "AIzaSyCl05SoXlATK9s3sqGCBYCtnfgwq53i86g",
-                messagingSenderId: "143894010196",
-                authDomain: "damphat-1ce0d.firebaseapp.com",
-                androidClientId:
-                    "143894010196-p1qnmldpv1ucao51e35v4bcu3lq3b4tb.apps.googleusercontent.com",
-                storageBucket: "damphat-1ce0d.appspot.com",
-              ));
+          fapp = await Firebase.initializeApp();
         } catch (FirebaseException) {
-          fapp = Firebase.app('fatcall');
+          fapp = Firebase.app();
         }
 
         fauth = FirebaseAuth.instanceFor(app: fapp);
@@ -119,7 +108,9 @@ class Auth with ChangeNotifier {
 
   Future<void> close() async {
     if (state != AuthState.none) {
-      await fapp?.delete();
+      try {
+        await fapp?.delete();
+      } catch (e) {}
       state = AuthState.none;
       user = null;
       error = null;
