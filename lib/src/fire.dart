@@ -30,6 +30,8 @@ class Fire {
           sub.cancel();
           _initCompleter!.complete(null);
         });
+
+        // note: bad firebase auth config cause an exception here
         sub = FirebaseAuth.instance.authStateChanges().listen((User? event) {
           if (event != null) {
             _user = event;
