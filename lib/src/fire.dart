@@ -23,9 +23,9 @@ class Fire {
 
       () async {
         await Firebase.initializeApp();
-        bool first = true;
+        var first = true;
         late StreamSubscription<User?> sub;
-        final Timer timer = Timer(const Duration(seconds: 2), () {
+        final timer = Timer(const Duration(seconds: 2), () {
           sub.cancel();
           _initCompleter!.complete(null);
         });
@@ -58,26 +58,25 @@ class Fire {
 
   Future<User?> login() async {
     // FIXME is this
-    final User? u = await init();
+    final u = await init();
     if (u != null) {
       return u;
     }
 
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    final googleUser = await GoogleSignIn().signIn();
 
     if (googleUser == null) {
       return null;
     }
 
-    final GoogleSignInAuthentication googleAuth =
-        await googleUser.authentication;
+    final googleAuth = await googleUser.authentication;
 
-    final OAuthCredential credential = GoogleAuthProvider.credential(
+    final credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    final UserCredential userCredential =
+    final userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
 
     _user = userCredential.user;

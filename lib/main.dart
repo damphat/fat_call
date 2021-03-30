@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final FirebaseApp app = await Firebase.initializeApp();
+  final app = await Firebase.initializeApp();
   print(app);
-  final UserCredential user = await FirebaseAuth.instance.signInAnonymously();
+  final user = await FirebaseAuth.instance.signInAnonymously();
   print(user);
 }
