@@ -1,11 +1,16 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
+import 'package:fat_call/src/fire.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final app = await Firebase.initializeApp();
-  print(app);
-  final user = await FirebaseAuth.instance.signInAnonymously();
-  print(user);
+  final fire = Fire();
+  var user = await fire.init();
+  assert(user == fire.user);
+  assert(user == await fire.init());
+
+  var login = await fire.login();
+  assert(login == fire.user);
+  assert(login == await fire.login());
+
+  await fire.logout();
+
+  assert(fire.user == null);
 }
