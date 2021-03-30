@@ -10,28 +10,26 @@ class Fire {
   User? get user => _user;
   Completer<User?>? _initCompleter;
 
-  // ensure init and restore user
-  // return current login
   Future<User?> init() {
     if (_initCompleter != null) {
       if (_initCompleter!.isCompleted) {
-        return Future.value(_user);
+        return Future<User?>.value(_user);
       } else {
         return _initCompleter!.future;
       }
     } else {
-      _initCompleter = Completer<User>();
+      _initCompleter = Completer<User>(); // FIXME change to <User?>
       WidgetsFlutterBinding.ensureInitialized();
 
       () async {
         await Firebase.initializeApp();
         bool first = true;
-        late StreamSubscription sub;
-        final timer = Timer(Duration(seconds: 2), () {
+        late StreamSubscription<User?> sub;
+        final Timer timer = Timer(const Duration(seconds: 2), () {
           sub.cancel();
           _initCompleter!.complete(null);
         });
-        sub = FirebaseAuth.instance.authStateChanges().listen((event) {
+        sub = FirebaseAuth.instance.authStateChanges().listen((User? event) {
           if (event != null) {
             _user = event;
             sub.cancel();
@@ -41,13 +39,14 @@ class Fire {
           }
 
           if (first) {
-            // first null
+            // skip first null
             first = false;
           } else {
-            _user = event;
+            // take second null
+            _user = null;
             sub.cancel();
             timer.cancel();
-            _initCompleter!.complete(event);
+            _initCompleter!.complete(null);
             return;
           }
         });
@@ -59,21 +58,26 @@ class Fire {
 
   Future<User?> login() async {
     // FIXME is this
-    var u = await init();
-    if (u != null) return u;
+    final User? u = await init();
+    if (u != null) {
+      return u;
+    }
 
-    final googleUser = await GoogleSignIn().signIn();
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    if (googleUser == null) return null;
+    if (googleUser == null) {
+      return null;
+    }
 
-    final googleAuth = await googleUser.authentication;
+    final GoogleSignInAuthentication googleAuth =
+        await googleUser.authentication;
 
-    final credential = GoogleAuthProvider.credential(
+    final OAuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    var userCredential =
+    final UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
 
     _user = userCredential.user;
