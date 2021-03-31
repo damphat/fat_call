@@ -60,10 +60,9 @@ class Fire {
   }
 
   Future<User?> login() async {
-    // FIXME is this
-    final u = await init();
-    if (u != null) {
-      return u;
+    final currentUser = await init();
+    if (currentUser != null) {
+      return currentUser;
     }
 
     final googleUser = await GoogleSignIn().signIn();
