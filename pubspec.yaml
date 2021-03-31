@@ -19,15 +19,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_launcher_icons:
-    git: https://github.com/personalizedrefrigerator/flutter_launcher_icons
+#  flutter_launcher_icons:
+#    git: https://github.com/personalizedrefrigerator/flutter_launcher_icons
+#  flutter_native_splash:
+#    git: https://github.com/jonbhanson/flutter_native_splash
   pedantic: ^1.11.0
-
-flutter_icons:
-  android: launcher_icon
-  ios: false
-  web: true
-  image_path: assets/icon/icon.png
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/logo.png
