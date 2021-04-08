@@ -90,3 +90,5 @@ class Fire {
     return FirebaseAuth.instance.signOut();
   }
 }
+
+final fire = Fire();
