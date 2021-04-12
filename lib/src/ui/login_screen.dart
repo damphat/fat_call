@@ -1,4 +1,4 @@
-import 'package:fat_call/src/fire.dart';
+import 'package:fat_call/src/fire/fire.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {

@@ -1,4 +1,4 @@
-import 'package:fat_call/src/fire.dart';
+import 'fire.dart';
 
 Future<void> main() async {
   final fire = Fire();

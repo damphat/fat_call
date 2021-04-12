@@ -1,5 +1,4 @@
-import 'package:fat_call/src/fire.dart';
-import 'package:flutter/cupertino.dart';
+import 'fire.dart';
 import 'package:flutter/material.dart';
 
 void main() {
