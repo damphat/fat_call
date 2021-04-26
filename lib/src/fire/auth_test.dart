@@ -1,7 +1,7 @@
-import 'fire.dart';
+import 'auth.dart';
 
 Future<void> main() async {
-  final fire = Fire();
+  final fire = Auth();
   var user = await fire.init();
   assert(user == fire.user);
   assert(user == await fire.init());

@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class Fire {
+class Auth {
   User? _user;
 
   User? get user => _user;
@@ -91,4 +91,16 @@ class Fire {
   }
 }
 
-final fire = Fire();
+extension UserToJson on User {
+  Map<String, dynamic> toJson() {
+    return {
+      'uid': uid,
+      'photoURL': photoURL,
+      'displayName': displayName,
+      'email': email,
+      'phoneNumber': phoneNumber,
+    };
+  }
+}
+
+final auth = Auth();

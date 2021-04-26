@@ -1,4 +1,4 @@
-import 'package:fat_call/src/fire/fire.dart';
+import 'package:fat_call/src/fire/auth.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -16,7 +16,7 @@ class LoginScreen extends StatelessWidget {
             SizedBox(height: 100),
             ElevatedButton(
               onPressed: () async {
-                var user = await fire.login();
+                var user = await auth.login();
                 if (user != null) {
                   if (Navigator.canPop(context)) {
                     await Navigator.maybePop(context, user);

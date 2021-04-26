@@ -1,4 +1,4 @@
-import 'fire.dart';
+import 'auth.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -13,7 +13,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final fire = Fire();
+  final fire = Auth();
   var logText = <String>[];
 
   @override

@@ -1,52 +1,72 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fat_call/src/model/muser.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:fat_call/src/dev/dbtn.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'fire.dart';
+import 'auth.dart';
 
 class Store {
-  FirebaseFirestore get instance => FirebaseFirestore.instance;
 
-  Stream<void> snapshotsInSync() {
-    return FirebaseFirestore.instance.snapshotsInSync();
+  CollectionReference collection(String path) {
+    return FirebaseFirestore.instance.collection(path);
   }
 
-  Future<void> enableNetwork() {
-    return instance.enableNetwork();
+  DocumentReference doc(String path, [String? key]) {
+    return FirebaseFirestore.instance.collection(path).doc(key);
   }
 
-  Future<void> disableNetwork() {
-    return instance.disableNetwork();
+  Future<Map<String, dynamic>?> data(String path, String id) async {
+    var docSnap = await doc(path, id).get();
+    return docSnap.data();
   }
 
-  // Clears any persisted data for the current instance.
-  Future<void> clearPersistence() {
-    return instance.clearPersistence();
+  Future<Iterable<Map<String, dynamic>>> getDocs(String path) async {
+    var colSnap = await collection(path).get();
+    return colSnap.docs.map((e) => e.data());
   }
 
-  //. This is a web-only method. Use [Settings.persistenceEnabled] for non-web platforms
-  Future<void> enablePersistence() {
-    return instance.enablePersistence();
-  }
-
-  Future<void> terminate() {
-    return instance.terminate();
-  }
-
-  Future<void> waitForPendingWrites() {
-    return instance.waitForPendingWrites();
-  }
-
-  Stream<MUser> users() async* {
-    var users = instance.collection('users');
-
-    await for (final snap in users.snapshots()) {
-      var docs = snap.docs;
-      // yield docs.map((e) {
-      //   return MUser(id: e.id, name: e.data(), photoUrl: photoUrl, online: online);
-      // });
+  Future<void> setDoc(
+    String path,
+    String id,
+    Map<String, dynamic>? data,
+  ) async {
+    if (data != null) {
+      await collection(path).doc(id).set(data);
+    } else {
+      await collection(path).doc(id).delete();
     }
+  }
+
+  Future<Iterable<T>> eachDoc<T>(
+    String p,
+    T Function(Map<String, dynamic>) func,
+  ) async {
+    var querySnap = await collection(p).snapshots().first;
+    return querySnap.docs.map((e) => func(e.data()));
+  }
+
+  Future<void> addUser(User user) async {
+    await collection('users').doc(user.uid).set({
+      'uid': user.uid,
+      'displayName': user.displayName,
+      'photoURL': user.photoURL,
+      'email': user.email,
+      'phoneNumber': user.phoneNumber,
+    });
+  }
+
+  Future<Map<String, dynamic>?> getUser(String uid) async {
+    var docSnap = await collection('users').doc(uid).get();
+    return docSnap.data();
+  }
+
+  static Iterable<Map<String, dynamic>> toList(QuerySnapshot snap) {
+    return snap.docs.map((docSnap) => docSnap.data());
+  }
+
+  Future users() async {
+    var users = await collection('users').get();
+    return users.docs.map((e) => e.data());
   }
 }
 
@@ -59,109 +79,16 @@ void main() {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Btn('init', fire.init),
-            Btn('logout', fire.logout),
-            Btn('login', fire.login),
-            Btn('firestore', () => store.instance),
-            Btn('data', store.snapshotsInSync),
-            Btn('enableNetwork', store.enableNetwork),
-            Btn('disableNetwork', store.disableNetwork),
-            Btn('clearPersistence', store.clearPersistence),
-            Btn('enablePersistence', store.enablePersistence),
-            Btn('terminate', store.terminate),
-            Btn('users/docs', store.users),
-            Btn('users/changes', store.users),
-            Btn('users/add', () {
-              var users = FirebaseFirestore.instance.collection('users');
-              return users.add({'name': 'Phat'});
-            }),
-            Btn('users/clear', () {
-              var users = FirebaseFirestore.instance.collection('users');
-              return users.add({'name': 'Phat'});
-            }),
+            Btn('init', auth.init),
+            Btn('logout', auth.logout),
+            Btn('login', auth.login),
+            Btn('fire.addUser', () => store.collection('users')),
+            Btn('fire.users', () => store.collection('user')),
           ],
         ),
       ),
     ),
   ));
-}
-
-class Btn extends StatefulWidget {
-  Btn(this.title, this.task);
-
-  final String title;
-  final Function task;
-
-  @override
-  _BtnState createState() => _BtnState();
-}
-
-class _BtnState extends State<Btn> {
-  Stream? stream;
-  var items = [];
-
-  Stream exec(Function task) {
-    try {
-      var ret = task();
-      if (ret == null) return Stream.empty();
-      if (ret is Future) return ret.asStream();
-      if (ret is Stream) return ret;
-      return Stream.value(ret);
-    } catch (error) {
-      return Stream.error(error);
-    }
-  }
-
-  void add(String kind, [data]) {
-    setState(() {
-      items.add([kind, data]);
-    });
-  }
-
-  void onPressed() {
-    stream = exec(widget.task);
-    add('init');
-    stream!.listen((event) {
-      add('data', event);
-    }, onError: (error) {
-      add('error', error);
-    }, onDone: () {
-      add('done');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final children = <Widget>[
-      Row(
-        children: [
-          ElevatedButton(onPressed: onPressed, child: Text(widget.title)),
-          if (items.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.clear),
-              onPressed: () {
-                setState(
-                  () {
-                    items.clear();
-                  },
-                );
-              },
-            )
-        ],
-      )
-    ];
-
-    for (var item in items) {
-      children.add(Divider());
-      children.add(Text('${item[0]}: ${item[1]}'));
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    );
-  }
 }
 
 class UserList extends StatefulWidget {
