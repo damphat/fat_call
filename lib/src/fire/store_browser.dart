@@ -54,7 +54,12 @@ class _CollectionViewState extends State<CollectionView> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Btn('login', auth.login),
+        Btn('login', () async {
+          var user = await auth.login();
+          if (user != null) {
+            await store.collection('users').doc(user.uid).set(user.toJson());
+          }
+        }),
         StreamBuilder<QuerySnapshot>(
           stream: snapshots(),
           builder: (context, snap) {
