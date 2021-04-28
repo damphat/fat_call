@@ -1,4 +1,3 @@
-// import 'src/fire/store.dart' as store;
-import 'src/fire/store_browser.dart' as store;
+import 'src/browser/browser.dart' as browser;
 
-void main() => store.main();
+void main() => browser.main();
